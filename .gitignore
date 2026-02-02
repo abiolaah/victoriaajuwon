@@ -44,4 +44,4 @@ next-env.d.ts
 src/lib/data/
 src/lib/types/next-auth.d.ts
 .hintrc
-src/actions/
+src/action/
