@@ -1,26 +1,220 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@import "uploadthing/tw/v4";
+@source "../node_modules/@uploadthing/react/dist"; /** <-- depends on your project structure */
+
+/* @custom-variant dark (&:is(.dark *)); */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --primary-colour: #e50914;
+  --shadow-colour: black;
+  --shadow-intensity: 0.6;
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ---------- Netflix SVG ---------- */
+.base {
+  fill: var(--primary-colour);
+  transition: fill 0.4s;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.shadow-start {
+  stop-color: var(--shadow-colour);
+  stop-opacity: var(--shadow-intensity);
+}
+
+.shadow-end {
+  stop-color: var(--shadow-colour);
+  stop-opacity: 0;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  height: 100%;
+  background: black;
+  overflow-x: hidden;
+  transition: background 0.4s;
+}
+
+#__next {
+  height: 100%;
+  overflow-x: hidden;
+  position: relative;
+}
+
+html {
+  height: 100%;
+  overflow-x: hidden;
+}
+
+/* Netflix card styling */
+.list-container {
+  position: relative;
+  margin: 2rem 0;
+  overflow: visible;
+}
+
+/* Make scroll container take full width */
+.list-container .scrollbar-hide.scroll-smooth {
+  width: 100%;
+  position: relative;
+}
+
+/* Show arrows on hover */
+.list-container:hover button {
+  opacity: 1;
+}
+
+/* Make sure arrows stay outside content area */
+.list-container button {
+  opacity: 0;
+  transition:
+    opacity 0.3s ease,
+    background-color 0.3s ease;
+}
+
+/* Make sure the scroll area has enough padding for the expanded cards */
+.list-container .scrollbar-hide {
+  padding-top: 1.5rem;
+  padding-bottom: 8rem;
+  margin-top: -1.5rem;
+  /* margin-bottom: -8rem; */
+}
+.card-container {
+  position: relative;
+  transition: transform 0.3s ease;
+}
+.card-wrapper {
+  position: relative;
+  transition:
+    transform 0.3s ease,
+    z-index 0.3s ease;
+}
+
+.expanded-card {
+  position: fixed;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7);
+  will-change: transform;
+}
+
+/* Achievement bullet points styling */
+.achievement-list {
+  margin-top: 1rem;
+}
+
+.achievement-item {
+  display: flex;
+  align-items: start;
+  gap: 0.5rem;
+}
+
+.achievement-bullet {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 100%;
+  background-color: #9810fa;
+  display: flex;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.75rem;
+  margin-top: 0.125rem;
+}
+
+.achievement-text {
+  font-size: 0.875rem;
+  line-height: calc(1.25 / 0.875);
+  color: #d4d4d8;
+}
+
+/* Modal styling */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 50;
+  /* backdrop-blur-sm */
+}
+
+.modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  background-color: #18181b;
+  border-width: 1;
+  border-style: solid;
+  border-color: #27272a;
+  border-radius: 0.25rem;
+  width: 100%;
+  max-width: 56rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  z-index: 50;
+  box-shadow:
+    0 20px 25px -5px rgb(0 0 0 / 0.1),
+    0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* Form tabs styling */
+.form-tabs {
+  display: flex;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+  overflow: hidden;
+}
+
+.form-tab {
+  display: flex;
+  flex: 1;
+  padding-block: 1rem;
+  transition-property:
+    color, background-color, border-color, outline-color, text-decoration-color,
+    fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.form-tab-active {
+  background-color: #27272a;
+  color: #fff;
+  font-weight: 500;
+}
+
+.form-tab-inactive {
+  background-color: #18181b;
+  color: #9f9fa9;
 }
