@@ -1,63 +1,63 @@
 "use client";
 
-import React from "react";
-import { Controller, useForm, useWatch } from "react-hook-form";
+import { educationSchema, EducationSchema } from "@/types/educationSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { experienceSchema, ExperienceSchema } from "@/types/experienceSchema";
+import { Controller, useForm, useWatch } from "react-hook-form";
+import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { FormCard } from "@/components/admin/form-card";
-import TagInput from "@/components/admin/tag-input";
-import DateInput from "@/components/admin/date-input";
-import { ProfessionalUploader } from "@/components/admin/image-uploader";
-
-import { AnimatePresence, motion } from "motion/react";
+import { Badge } from "@/components/ui/badge";
 import {
   Award,
-  Briefcase,
-  Building,
+  BookOpen,
   Calendar,
   CheckCircle,
-  ImageIcon,
+  GraduationCap,
+  School,
   Sparkles,
   Trash2,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
-import { formatDate } from "@/lib/utils";
-import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
+import { AnimatePresence, motion } from "motion/react";
+import { Button } from "../ui/button";
+import { FormCard } from "@/components/admin/form-card";
+import DateInput from "@/components/admin/date-input";
+import { ProfessionalUploader } from "@/components/admin/image-uploader";
+import TagInput from "@/components/admin/tag-input";
+import { useState } from "react";
 
-interface ExperienceFormProps {
-  initialData?: Partial<ExperienceSchema>;
-  onSubmit: (data: ExperienceSchema) => void;
+interface EducationFormProps {
+  initialData?: Partial<EducationSchema>;
+  onSubmit: (data: EducationSchema) => void;
   onDelete?: () => void;
+  setIsModalOpen: (open: boolean) => void;
 }
 
-export function ExperienceForm({
+export const EducationForm = ({
   initialData,
   onSubmit,
   onDelete,
-}: ExperienceFormProps) {
-  const [showSuccess, setShowSuccess] = React.useState(false);
+  setIsModalOpen,
+}: EducationFormProps) => {
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  const form = useForm<ExperienceSchema>({
-    resolver: zodResolver(experienceSchema),
+  const form = useForm<EducationSchema>({
+    resolver: zodResolver(educationSchema),
     defaultValues: {
-      role: initialData?.role || "",
-      company: initialData?.company || "",
+      degree: initialData?.degree || "",
+      institution: initialData?.institution || "",
+      fieldOfStudy: initialData?.fieldOfStudy || "",
       startDate: initialData?.startDate || undefined,
       endDate: initialData?.endDate || undefined,
       description: initialData?.description || [],
       imageUrl: initialData?.imageUrl || "",
       assetId: initialData?.assetId || "",
+      isCommon: initialData?.isCommon || false,
     },
   });
 
-  const handleFormSubmit = async (data: ExperienceSchema) => {
-    console.log("Submitting experience data:", data);
+  const handleFormSubmit = async (data: EducationSchema) => {
     try {
       await onSubmit(data);
-
       setShowSuccess(true);
 
       // Reset form only if adding new (not editing)
@@ -65,38 +65,33 @@ export function ExperienceForm({
         form.reset();
       }
 
-      // Hide success message and close modal after delay
+      // Close modal after a brief delay to show success message
       setTimeout(() => {
         setShowSuccess(false);
-      }, 3000);
+        setIsModalOpen(false);
+      }, 1000);
     } catch (error) {
       console.error("Error submitting form:", error);
       // Don't reset form or close modal on error
     }
   };
 
-  const isSubmitting = form.formState.isSubmitting;
-
-  const watchedRole = useWatch({ control: form.control, name: "role" });
-  const watchedCompany = useWatch({ control: form.control, name: "company" });
-  const watchedStartDate = useWatch({
+  const watchedDegree = useWatch({ control: form.control, name: "degree" });
+  const watchedInstitution = useWatch({
     control: form.control,
-    name: "startDate",
+    name: "institution",
   });
-  const watchedEndDate = useWatch({ control: form.control, name: "endDate" });
+  const watchedFieldOfStudy = useWatch({
+    control: form.control,
+    name: "fieldOfStudy",
+  });
   const watchedImageUrl = useWatch({ control: form.control, name: "imageUrl" });
 
-  const formatDateRange = () => {
-    if (!watchedStartDate) return "Date Range";
-    const start = formatDate(watchedStartDate);
-    const end =
-      watchedEndDate === undefined ? "Present" : formatDate(watchedEndDate);
-    return `${start} - ${end}`;
-  };
+  const isSubmitting = form.formState.isSubmitting;
 
   return (
     <div className="relative">
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="w-full">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)}>
         <FormCard
           className="relative overflow-hidden"
           footer={
@@ -111,11 +106,12 @@ export function ExperienceForm({
                   >
                     <CheckCircle className="w-4 h-4" />
                     <span className="text-sm">
-                      Experience added successfully!
+                      Education added successfully!
                     </span>
                   </motion.div>
                 )}
               </AnimatePresence>
+
               <div className="flex gap-3">
                 {onDelete && (
                   <Button
@@ -132,7 +128,7 @@ export function ExperienceForm({
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-linear-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white border-none shadow-lg hover:shadow-xl transition-all duration-300 min-w-35"
+                  className="bg-linear-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white border-none shadow-lg hover:shadow-xl transition-all duration-300 min-w-35 cursor-pointer"
                 >
                   {isSubmitting ? (
                     <motion.div
@@ -146,10 +142,10 @@ export function ExperienceForm({
                     />
                   ) : (
                     <>
-                      <Briefcase className="w-4 h-4 mr-2" />
-                      {initialData?.role
-                        ? "Update Experience"
-                        : "Add Experience"}
+                      <GraduationCap className="w-4 h-4 mr-2" />
+                      {initialData?.degree
+                        ? "Update Education"
+                        : "Add Education"}
                     </>
                   )}
                 </Button>
@@ -166,39 +162,39 @@ export function ExperienceForm({
             >
               <Sparkles className="w-6 h-6 text-yellow-400" />
               <h2 className="text-2xl font-bold text-white">
-                {initialData?.role ? "Edit Experience" : "Add Work Experience"}
+                {initialData?.degree ? "Edit Education" : "Add Education"}
               </h2>
               <Sparkles className="w-6 h-6 text-yellow-400" />
             </motion.div>
             <p className="text-zinc-400 text-sm">
-              Document your professional journey and accomplishments
+              Document your academic achievements and qualifications
             </p>
           </div>
 
-          {/* Form Section: Company, roles, date, image */}
+          {/* Form Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Left Column */}
             <div className="space-y-6">
-              {/* Role */}
+              {/* Degree */}
               <FieldGroup>
                 <Controller
-                  name="role"
+                  name="degree"
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel
-                        htmlFor="role"
+                        htmlFor="education-degree"
                         className="text-sm font-medium text-white flex items-center gap-2"
                       >
-                        <Briefcase className="w-4 h-4 text-blue-400" />
-                        Job Title / Role
+                        <GraduationCap className="w-4 h-4 text-blue-400" />
+                        Degree
                       </FieldLabel>
                       <Input
                         {...field}
-                        id="role"
+                        id="education-degree"
                         aria-invalid={fieldState.invalid}
                         className="border-zinc-700 bg-zinc-800/50 text-white focus:border-blue-500/70 focus:ring-1 focus:ring-blue-500/70 transition-all duration-200"
-                        placeholder="Software Engineer, Product Manager, etc."
+                        placeholder="Bachelor of Science, Master of Arts, etc."
                         autoComplete="off"
                       />
                       {fieldState.invalid && (
@@ -209,26 +205,56 @@ export function ExperienceForm({
                 />
               </FieldGroup>
 
-              {/* Company */}
+              {/* Institution */}
               <FieldGroup>
                 <Controller
-                  name="company"
+                  name="institution"
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel
-                        htmlFor="company"
+                        htmlFor="education-institution"
                         className="text-sm font-medium text-white flex items-center gap-2"
                       >
-                        <Building className="w-4 h-4 text-green-400" />
-                        Company / Organization
+                        <School className="w-4 h-4 text-green-400" />
+                        Institution
                       </FieldLabel>
                       <Input
                         {...field}
-                        id="company"
+                        id="education-institution"
                         aria-invalid={fieldState.invalid}
                         className="border-zinc-700 bg-zinc-800/50 text-white focus:border-green-500/70 focus:ring-1 focus:ring-green-500/70 transition-all duration-200"
-                        placeholder="Google, Microsoft, Startup Inc., etc."
+                        placeholder="University of Technology, Harvard University, etc."
+                        autoComplete="off"
+                      />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </FieldGroup>
+
+              {/* Field of Study */}
+              <FieldGroup>
+                <Controller
+                  name="fieldOfStudy"
+                  control={form.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel
+                        htmlFor="fieldOfStudy"
+                        className="text-sm font-medium text-white flex items-center gap-2"
+                      >
+                        <BookOpen className="w-4 h-4 text-purple-400" />
+                        Field of Study
+                      </FieldLabel>
+                      <Input
+                        {...field}
+                        id="fieldOfStudy"
+                        aria-invalid={fieldState.invalid}
+                        className="border-zinc-700 bg-zinc-800/50 text-white focus:border-purple-500/70 focus:ring-1 focus:ring-purple-500/70 transition-all duration-200"
+                        placeholder="Computer Science, Business Administration, etc."
                         autoComplete="off"
                       />
                       {fieldState.invalid && (
@@ -305,19 +331,16 @@ export function ExperienceForm({
 
             {/* Right Column */}
             <div className="space-y-6">
-              {/* Organization Logo */}
+              {/* Image */}
               <FieldGroup>
                 <Controller
                   name="imageUrl"
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel
-                        htmlFor="company"
-                        className="text-sm font-medium text-white flex items-center gap-2"
-                      >
-                        <ImageIcon className="w-4 h-4 text-cyan-400" />
-                        Company Logo
+                      <FieldLabel className="text-sm font-medium text-white flex items-center gap-2">
+                        <School className="w-4 h-4 text-cyan-400" />
+                        Institution Logo
                       </FieldLabel>
                       <ProfessionalUploader
                         value={field.value || ""}
@@ -357,7 +380,7 @@ export function ExperienceForm({
                           watchedImageUrl ||
                           "https://res.cloudinary.com/dixwarqdb/image/upload/v1743796014/samples/man-on-a-street.jpg"
                         }
-                        alt="Company logo"
+                        alt="Institution Logo"
                         width={48}
                         height={48}
                         className="w-12 h-12 rounded object-cover"
@@ -365,10 +388,10 @@ export function ExperienceForm({
                     )}
                     <div>
                       <h4 className="text-white font-medium">
-                        {watchedRole || "Job Title"}
+                        {watchedDegree || "Degree Name"}
                       </h4>
                       <p className="text-zinc-400 text-sm">
-                        {watchedCompany || "Company Name"}
+                        {watchedInstitution || "Institution Name"}
                       </p>
                     </div>
                   </div>
@@ -378,24 +401,16 @@ export function ExperienceForm({
                       variant="secondary"
                       className="bg-zinc-700 text-white"
                     >
-                      <Calendar className="w-3 h-3 mr-1" />
-                      {formatDateRange()}
+                      <BookOpen className="w-3 h-3 mr-1" />
+                      {watchedFieldOfStudy || "Field of Study"}
                     </Badge>
-                    {watchedEndDate === undefined && (
-                      <Badge
-                        variant="secondary"
-                        className="bg-green-600 text-white"
-                      >
-                        Current Position
-                      </Badge>
-                    )}
                   </div>
                 </div>
               </motion.div>
             </div>
           </div>
 
-          {/* Other Form Section: Achievements */}
+          {/* Achievements Section */}
           <div className="mt-8">
             <FieldGroup>
               <Controller
@@ -424,5 +439,4 @@ export function ExperienceForm({
       </form>
     </div>
   );
-}
-export default ExperienceForm;
+};
