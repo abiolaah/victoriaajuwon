@@ -1,0 +1,327 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum SceneObjectType {
+  LANDMARK
+  TERMINAL
+  HOLOGRAM
+  BEACON
+  SATELLITE
+  BUILDING
+  VEHICLE
+  PORTAL
+  PROJECT_NODE
+  SKILL_NODE
+  DECORATION
+}
+
+enum InteractionType {
+  PANEL
+  MODAL
+  DRAWER
+  LINK
+  PROJECT
+  SKILL
+  DOWNLOAD
+  NONE
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  MODEL_3D
+  AUDIO
+  DOCUMENT
+  ICON
+}
+
+enum MessageStatus {
+  UNREAD
+  READ
+  ARCHIVED
+  SPAM
+}
+
+enum ExperienceType {
+  WORK
+  EDUCATION
+  CERTIFICATION
+  VOLUNTEER
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  role         String   @default("ADMIN")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  auditLogs    AuditLog[]
+}
+
+model Planet {
+  id                 String        @id @default(cuid())
+  slug               String        @unique
+  title              String
+  subtitle           String?
+  /** Short line under the label on the home nav, e.g. "Quality in every step" */
+  tagline            String?
+  /** Default hologram statement shown before a hotspot is picked */
+  description        String?
+  order              Int           @unique
+  theme              String?
+  status             PublishStatus @default(DRAFT)
+
+  /** Full-bleed background used on /planet/[slug] */
+  backgroundMediaId  String?
+  /** Small round artwork used in the home page's planet nav strip */
+  navIconMediaId     String?
+  astronautMediaId   String?
+  mobileBackgroundId String?
+
+  /** Home nav layout — planet width (vw) and vertical stagger (vh) */
+  navSize            Float?        @default(5)
+  navOffset          Float?        @default(0)
+
+  seoTitle           String?
+  seoDescription     String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  backgroundMedia    MediaAsset?   @relation("PlanetBackground", fields: [backgroundMediaId], references: [id])
+  navIcon            MediaAsset?   @relation("PlanetNavIcon", fields: [navIconMediaId], references: [id])
+  astronautMedia     MediaAsset?   @relation("PlanetAstronaut", fields: [astronautMediaId], references: [id])
+  mobileBackground   MediaAsset?   @relation("PlanetMobileBackground", fields: [mobileBackgroundId], references: [id])
+  sceneObjects       SceneObject[]
+  projects           Project[]
+}
+
+model SceneObject {
+  id              String          @id @default(cuid())
+  planetId        String
+  name            String
+  slug            String
+  type            SceneObjectType
+  interactionType InteractionType @default(PANEL)
+  description     String?
+  content         Json?
+  status          PublishStatus   @default(PUBLISHED)
+  x               Float           @default(50)
+  y               Float           @default(50)
+  z               Float           @default(0)
+  scale           Float           @default(1)
+  rotation        Float           @default(0)
+  animationPreset String?
+  linkedProjectId String?
+  linkedSkillId   String?
+  mediaId         String?
+  isInteractive   Boolean         @default(true)
+  sortOrder       Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  planet          Planet          @relation(fields: [planetId], references: [id], onDelete: Cascade)
+  linkedProject   Project?        @relation(fields: [linkedProjectId], references: [id], onDelete: SetNull)
+  linkedSkill     Skill?          @relation(fields: [linkedSkillId], references: [id], onDelete: SetNull)
+  media           MediaAsset?     @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+
+  @@unique([planetId, slug])
+  @@index([planetId, sortOrder])
+}
+
+model Project {
+  id               String              @id @default(cuid())
+  planetId         String?
+  slug             String              @unique
+  name             String
+  shortDescription String?
+  description      String?
+  problem          String?
+  solution         String?
+  role             String?
+  status           PublishStatus       @default(DRAFT)
+  featured         Boolean             @default(false)
+  githubUrl        String?
+  liveUrl          String?
+  caseStudyUrl     String?
+  coverMediaId     String?
+  sortOrder        Int                 @default(0)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  planet           Planet?             @relation(fields: [planetId], references: [id], onDelete: SetNull)
+  coverMedia       MediaAsset?         @relation("ProjectCover", fields: [coverMediaId], references: [id], onDelete: SetNull)
+  technologies     ProjectTechnology[]
+  media            ProjectMedia[]
+  caseStudyBlocks  CaseStudyBlock[]
+  sceneObjects     SceneObject[]
+  skills           ProjectSkill[]
+}
+
+model Technology {
+  id        String              @id @default(cuid())
+  name      String              @unique
+  category  String?
+  icon      String?
+  url       String?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  projects  ProjectTechnology[]
+}
+
+model ProjectTechnology {
+  projectId    String
+  technologyId String
+  sortOrder    Int        @default(0)
+
+  project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  technology   Technology @relation(fields: [technologyId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, technologyId])
+}
+
+model ProjectMedia {
+  id        String     @id @default(cuid())
+  projectId String
+  mediaId   String
+  caption   String?
+  sortOrder Int        @default(0)
+
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  media     MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, mediaId])
+}
+
+model CaseStudyBlock {
+  id        String   @id @default(cuid())
+  projectId String
+  type      String
+  title     String?
+  content   Json
+  sortOrder Int      @default(0)
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, sortOrder])
+}
+
+model Skill {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  category    String
+  description String?
+  proficiency Int?
+  icon        String?
+  status      PublishStatus @default(PUBLISHED)
+  sortOrder   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  sceneObjects SceneObject[]
+  projects     ProjectSkill[]
+}
+
+model ProjectSkill {
+  projectId String
+  skillId   String
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  skill     Skill   @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, skillId])
+}
+
+model Experience {
+  id           String         @id @default(cuid())
+  type         ExperienceType
+  organization String
+  title        String?
+  location     String?
+  startDate    DateTime?
+  endDate      DateTime?
+  current      Boolean        @default(false)
+  description  String?
+  highlights   Json?
+  status       PublishStatus  @default(PUBLISHED)
+  sortOrder    Int            @default(0)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model MediaAsset {
+  id                      String         @id @default(cuid())
+  name                    String
+  url                     String
+  storageKey              String?
+  type                    MediaType
+  mimeType                String?
+  altText                 String?
+  width                   Int?
+  height                  Int?
+  fileSize                Int?
+  focalPointX             Float?
+  focalPointY             Float?
+  metadata                Json?
+  createdAt               DateTime       @default(now())
+  updatedAt               DateTime       @updatedAt
+
+  backgroundPlanets       Planet[]       @relation("PlanetBackground")
+  navIconPlanets          Planet[]       @relation("PlanetNavIcon")
+  astronautPlanets        Planet[]       @relation("PlanetAstronaut")
+  mobileBackgroundPlanets Planet[]       @relation("PlanetMobileBackground")
+  sceneObjects            SceneObject[]
+  projectCovers           Project[]      @relation("ProjectCover")
+  projectMedia            ProjectMedia[]
+}
+
+model ContactMessage {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  status    MessageStatus @default(UNREAD)
+  ipHash    String?
+  userAgent String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model SiteSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Json
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String?
+  before     Json?
+  after      Json?
+  createdAt  DateTime @default(now())
+
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}

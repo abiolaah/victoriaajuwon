@@ -1,0 +1,29 @@
+# docker-compose.yml
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "5437:5432"
+    environment:
+      POSTGRES_DB: portfolio
+      POSTGRES_USER: portfolio
+      POSTGRES_PASSWORD: portfolio_dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  postgres_polar:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - "5438:5432"
+    environment:
+      POSTGRES_DB: portfolio_pl
+      POSTGRES_USER: portfolio
+      POSTGRES_PASSWORD: portfolio_dev
+    volumes:
+      - postgres_polar_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+  postgres_polar_data:
